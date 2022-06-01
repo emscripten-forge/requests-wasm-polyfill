@@ -6,7 +6,7 @@ if "pyodide" not in sys.modules:
     import pyjs
 
     js = pyjs.js
-    use_cpyjs = True
+    use_pyjs = True
 else:
     import pyodide
     import js
