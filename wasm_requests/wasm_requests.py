@@ -1,14 +1,16 @@
-
 import time
 import json
+import sys
 
 if "pyodide" not in sys.modules:
-    import pyjs 
+    import pyjs
+
     js = pyjs.js
     use_cpyjs = True
-else
-    import pyodide 
+else:
+    import pyodide
     import js
+
     use_pyjs = False
 
 
@@ -18,6 +20,7 @@ def js_to_py(js_object):
     else:
         return js_object.to_py()
 
+
 def new_js_object(js_object, *args):
 
     if use_pyjs:
@@ -25,11 +28,13 @@ def new_js_object(js_object, *args):
     else:
         return js_object.new(*args)
 
+
 def js_null():
     if use_pyjs:
         return pyjs.js_null()
     else:
         return None
+
 
 def _parse_get_all_response_headers(request):
     body = """
