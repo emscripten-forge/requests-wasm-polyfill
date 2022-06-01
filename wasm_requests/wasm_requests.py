@@ -1,15 +1,61 @@
-import pyjs
+
 import time
 import json
+
+if "pyodide" not in sys.modules:
+    import pyjs 
+    js = pyjs.js
+    use_cpyjs = True
+else
+    import pyodide 
+    import js
+    use_pyjs = False
+
+
+def js_to_py(js_object):
+    if use_pyjs:
+        return pyjs.to_py(js_object)
+    else:
+        return js_object.to_py()
+
+def new_js_object(js_object, *args):
+
+    if use_pyjs:
+        return pyjs.new(js_object, *args)
+    else:
+        return js_object.new(*args)
+
+def js_null():
+    if use_pyjs:
+        return pyjs.js_null()
+    else:
+        return None
+
+def _parse_get_all_response_headers(request):
+    body = """
+        var allResponseHeaders = request.getAllResponseHeaders()
+        var arr = allResponseHeaders.split("\r\n");
+        var headers = {};
+        allResponseHeaders
+          .trim()
+          .split(/[\r\n]+/)
+          .map(value => value.split(/: /))
+          .forEach(keyValue => {
+            headers[keyValue[0].trim()] = keyValue[1].trim();
+          });
+        return headers
+    """
+    headers = js.Function("request", body)(request)
+    return js_to_py(headers)
 
 
 def request(method, url, headers=None, auth=None, data=None, params=None):
 
     # setup xml request
-    xmlr = pyjs.new(pyjs.js.XMLHttpRequest)
+    xmlr = new_js_object(js.XMLHttpRequest)
 
     # url object
-    url = pyjs.new(pyjs.js.URL, url)
+    url = new_js_object(js.URL, url)
 
     # params
     if params is not None:
@@ -20,7 +66,7 @@ def request(method, url, headers=None, auth=None, data=None, params=None):
     if auth is not None:
         xmlr.open(method, url, False, auth[0], auth[1])
         xmlr.setRequestHeader(
-            "Authorization", "Basic " + pyjs.js.btoa(f"{auth[0]}:{auth[1]}")
+            "Authorization", "Basic " + js.btoa(f"{auth[0]}:{auth[1]}")
         )
         xmlr.withCredentials = True
     else:
@@ -38,7 +84,7 @@ def request(method, url, headers=None, auth=None, data=None, params=None):
     # send xml request and time it
     t0 = time.time()
     if data is None:
-        xmlr.send(pyjs.js_null())
+        xmlr.send(js_null())
     else:
         request.send("")
     elapsed = time.time() - t0
@@ -50,7 +96,7 @@ def request(method, url, headers=None, auth=None, data=None, params=None):
 class Response(object):
     def __init__(self, request, elapsed):
         self._request = request
-        self._request_response = pyjs.to_py(request.response)
+        self._request_response = js_to_py(request.response)
         self.content = self._request_response.tobytes()
         self.encoding = "UTF-8"
         self.elapsed = elapsed
@@ -65,8 +111,7 @@ class Response(object):
 
     @property
     def headers(self):
-        parse = pyjs.internal.module_property("_parseGetAllResponseHeaders")
-        return pyjs.to_py(parse(self._request))
+        return _parse_get_all_response_headers(self._request)
 
     @property
     def text(self):
