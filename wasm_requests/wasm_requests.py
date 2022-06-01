@@ -37,7 +37,7 @@ def js_null():
 
 
 def _parse_get_all_response_headers(request):
-    body = """
+    body = r"""
         var allResponseHeaders = request.getAllResponseHeaders()
         var arr = allResponseHeaders.split("\r\n");
         var headers = {};
