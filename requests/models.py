@@ -1,4 +1,5 @@
 import json
+import numpy
 
 from .utils import js_to_py, parse_get_all_response_headers
 
@@ -7,7 +8,7 @@ class Response(object):
     def __init__(self, request, elapsed):
         self._request = request
         self._request_response = js_to_py(request.response)
-        self.content = self._request_response.tobytes()
+        self.content = numpy.array(self._request_response).tobytes()
         self.encoding = "UTF-8"
         self.elapsed = elapsed
         self.status_code = self._request.status
